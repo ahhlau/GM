@@ -36,9 +36,9 @@
 		- OK -> OK -> OK
 
 ##How to run this:
-	### Method 1
-	- double click syntax.py
-	### Method 2
+### Method 1
+- double click syntax.py
+### Method 2
 	- navigate to your change request folder in which test.py resides
 	- right click -> Properties
 	- copy Location
