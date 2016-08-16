@@ -1,5 +1,5 @@
-## GM
-#Setup: 
+# GM
+##Setup: 
 	- Extract files into the same directory as your change request ID folders. File structure should look something like this:
 		/Change requests
 			-> syntax.py
@@ -20,7 +20,7 @@
 		PC1 - FI-00204_FI-00178_FI-00179 change.txt
 		PC1 - FI-00204_FI-00178_FI-00179 change - backout.txt
 
-#Install Python:
+##Install Python:
 	- https://www.python.org/downloads/release/python-2710/
 	- download Windows x86 MSI installer
 	- run the file to install python
@@ -35,7 +35,7 @@
 			;C:\Python27\;C:\Python27\Scripts\
 		- OK -> OK -> OK
 
-#How to run this:
+##How to run this:
 	- navigate to your change request folder in which test.py resides
 	- right click -> Properties
 	- copy Location
@@ -51,7 +51,7 @@
 		python syntax.py
 	- Enter
 
-#What this program does:
+##What this program does:
 	- Once you hit enter, the console will display some information. This is just a quick view. 
 		- First section are the tests/checks that are run. 
 			- Test [did it past the test? True/False, num of failures, which jobs failed]
