@@ -305,7 +305,7 @@ def startTimes(jtext):
 	check = True
 	failures = 0
 	job = []
-	pattern = re.compile('^"([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]"$|^$')
+	pattern = re.compile('^"(([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9],\s?)*([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]"$|^$')
 	for i in jtext:
 		for j in range(len(i)):
 			# print i
@@ -327,7 +327,7 @@ def startMins(jtext):
 	check = True
 	failures = 0
 	job = []
-	pattern = re.compile('^[\d\d,]*\d\d$')
+	pattern = re.compile('^([0-5][0-9],\s?)*[0-5][0-9]$|^$')
 	for i in jtext:
 		for j in range(len(i)):
 			if 'start_mins:' in i[j]:
@@ -834,19 +834,25 @@ def main():
 	if jobCount[0] != 0:
 		f.write(str(jobCount[0]))
 		f.write(" update jobs")
+		if 0 not in jobCount[1:]:
+			f.write(',')
+	
 	if jobCount[1] != 0:
-		f.write(", ")
 		f.write(str(jobCount[1]))
 		f.write(" insert jobs")
+		if 0 not in jobCount[2:]:
+			f.write(',')
+	
 	if jobCount[2] != 0:
-		f.write(", ")
 		f.write(str(jobCount[2]))
 		f.write(" delete jobs")
+		if 0 not in jobCount[3:]:
+			f.write(',')
+	
 	if jobCount[3] != 0:
-		f.write(", ")
 		f.write(str(jobCount[3]))
 		f.write(" delete boxes")
-	f.write("\n\n")
+	f.write("\n\n\n")
 
 	jobUpdate = []
 	jobDelete = []
