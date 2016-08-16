@@ -1,7 +1,7 @@
 # GM
 ##Setup: 
 - Extract files into the same directory as your change request ID folders. File structure should look something like this:
-	/Change requests
+	- /Change requests
 		-> syntax.py
 		-> input.txt
 		-> readme.md
