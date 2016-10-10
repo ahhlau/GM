@@ -696,6 +696,106 @@ def asms(jil):
 	else:
 		return [check, failures, []]
 
+def insertJobs(jtext):
+	check = True
+	failures = 0
+	job = []
+	appFail = 0
+	appJob = []
+	groupFail = 0
+	groupJob = []
+	alarmFail = 0
+	alarmJob = []
+	def application(iJob):
+		a = 0
+		fail = 0
+		for i in iJob:
+			# print i
+			if "application: mon-batch-" in i:
+				a += 1
+		# print a
+		if a != 1:
+			fail += 1
+			b, c = iJob[0].split(":")
+			c = c.strip()
+			return [fail, c]
+		else:
+			return [fail, []]
+
+	def group(iJob):
+		a = 0
+		check = ['P2', 'P3', 'P4']
+		fail = 0
+		for i in iJob:
+			if 'group:' in i:
+				b, c = i.split(":")
+				# print c.strip()
+				if c.strip() in check:
+					a += 1
+				# print a
+		if a != 1:
+			fail += 1
+			b, c = iJob[0].split(":")
+			c = c.strip()
+			return [fail, c]
+		else:
+			return [fail, []]
+
+	def alarm(iJob):
+		a = 0
+		check = ['y', 'n']
+		fail = 0
+		for i in iJob:
+			if 'alarm_if_fail:' in i:
+				b, c = i.split(":")
+				if c.strip() in check:
+					a += 1
+		if a != 1:
+			fail += 1
+			b, c = iJob[0].split(":")
+			c = c.strip()
+			return [fail, c]
+		else:
+			return [fail, []]
+
+	for i in jtext:
+		if 'insert_job' in i[0]:
+			a = application(i)
+			b = group(i)
+			c = alarm(i)
+			appFail += a[0]
+			if a[1]:
+				appJob.append(a[1])
+			groupFail += b[0]
+			if b[0]:
+				groupJob.append(b[1])
+			alarmFail += c[0]
+			if c[0]:
+				alarmJob.append(c[1])
+	failures = appFail + groupFail + alarmFail
+
+	if failures != 0:
+		check = False
+	for i in appJob:
+		job.append(i)
+	for i in groupJob:
+		job.append(i)
+	for i in alarmJob:
+		job.append(i)
+
+	# print '####'
+	# print job
+	# print	
+
+
+  	job = uniqueList(job)
+	
+
+	return [check, failures, job, [appFail, appJob], [groupFail, groupJob], [alarmFail, alarmJob]]
+
+def uniqueList(seq):
+	seen = set()
+	return [x for x in seq if x not in seen and not seen.add(x)]
 
 def main():
 	print 'hello'
@@ -757,7 +857,10 @@ def main():
 
 	print
 	print
-	# allChecks(textParse, textParseBack)
+	print "Insert jobs"
+	print insertJobs(textParse)
+	print
+	print
 
 # Checking
 	passChecks = True
@@ -798,6 +901,7 @@ def main():
 	a25 = (correctInputs(parse))
 	a26 = (correctInputs(parseBack))
 
+	a27 = (insertJobs(textParse))
 
 	output.append(a1)
 	output.append(a2)
@@ -824,6 +928,8 @@ def main():
 	output.append(a23)
 	output.append(a24)
 	output.append(a25)
+	output.append(a26)
+	output.append(a27)
 
 # Add total of failures and jobs
 	# print output[22]
@@ -1061,6 +1167,41 @@ def main():
 			f.write("\n")
 		f.write("\n\n")
 
+	if a26[-1]:
+		f.write("Incorrect input in Backout\n")
+		f.write("Comments should start with '#' or be surrounded by '/*' and '*/'\n")
+		for i in range(len(a26[-1])):
+			f.write("Line number ")
+			f.write(str(a26[-2][i]))
+			f.write(" : ")
+			f.write(str(a26[-1]))
+			f.write("\n")
+		f.write("\n\n")
+
+	if a27[2]:
+		f.write("As of 10/10/2016, all insert jobs should have 'application', 'group', and 'alarm_if_fail' attributes\n")
+		f.write("Please add the attributes below for the following jobs:\n\n")
+
+		if a27[3][1]:
+			f.write("application - the batch monitoring configuration item that should be assigned incidient fialures from the job, format is mon-batch-<application CI>-prod in most cases\n")
+			f.write("'application' attributes should be in the following insert jobs:\n")
+			for i in a27[3][1]:
+				f.write(str(i))
+				f.write("\n")
+			f.write("\n\n")
+		if a27[4][1]:
+			f.write("group - the priority that should be assigned to the incident ticket.  Valid values are P2, P3, or P4\n")
+			f.write("'group' attributes should be in the following insert jobs:\n")
+			for i in a27[3][1]:
+				f.write(str(i))
+				f.write("\n")
+			f.write("\n\n")
+		if a27[5][1]:
+			f.write("alarm_if_fail - should be y if an alert is to be sent on failure, or n if an alert is not to be sent\n")
+			f.write("'alarm_if_fail' attributes should be in the following insert jobs:\n")
+			for i in a27[4][1]:
+				f.write(str(i))
+				f.write("\n")
 
 	f.close()
 
