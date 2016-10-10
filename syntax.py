@@ -46,16 +46,22 @@ def readJobs(filename):
 		lines = filter(None, (line.rstrip() for line in f))
 
 	text = []
+	dup = []
 	job = ['update_job', 'insert_job', 'delete_job', 'delete_box']
 	for i in lines:
-		i = i.lstrip()
+		i = i.strip()
 		if 'job_type' in i and 'job:' in i:
 			a, b = i.split('job_type:')
 			text.append(a.strip())
 		else:
 			for j in job:
 				if j in i:
-					text.append(i)
+					if j not in text:
+						text.append(i)
+					else:
+						print "Duplicate job names:", i
+						dup.append(i)
+						text.append(i)
 	f.close()
 
 	return text
@@ -66,27 +72,45 @@ def readFile(filename):
 		lines = filter(None, (line.rstrip() for line in f))
 
 	text = []
+	dup = []
+	dupe = []
 	for i in lines:
-		i = i.lstrip()
+		i = i.strip()
 		if i[0] == '/':
 			pass
 		elif i[0] == '#':
 			pass
-		elif 'job_type' in i:
+		elif 'job_type' in i and 'job:' in i:
 			a, b = i.split('job_type:')
+			if a.strip() in text:
+				dup.append(a.strip())
+				# print a.strip()
 			text.append(a.strip())
 			text.append('job_type: ' + b.strip())
 		else:
+			if 'job:' in i and i in text:
+				dup.append(i)
 			text.append(i)
 	f.close()
 
-	return text
+	if dup:
+		dupe.append(False)
+		dupe.append(len(dup))
+		dupe.append(dup)
+	else:
+		dupe.append(True)
+		dupe.append(0)
+		dupe.append(dup)
+	# print dupe
+
+	return text, dupe
 
 # Parses file to a list of jobs
 def parseJobs(text):
 	check = ['update_job', 'insert_job', 'delete_job', 'delete_box']
 	job = []
 	temp = []
+	dup = []
 
 	for i in range(len(text)-1):
 		temp.append(text[i])
@@ -149,38 +173,35 @@ def jParse(text):
 	
 	return job
 
-# def valid(jtext):
-# 	check = True
-# 	failures = 0
-# 	job = []
-# 	num = 0
-# 	checks = ['insert_job', 'update_job', 'delete_job', 'delete_box']
-# 	# for i in jtext:
-# 	# 	for j in range(len(text)):
-# 	# 		for 
-# 	for i in range(len(text)):
-# 		if text[i] == ' ':
-# 			# print text[i+1]
-# 			a, b = text[i+1].split(": ")
-# 			# print a
-# 			if a in checks:
-# 				num += 1
-# 			if a not in checks:
-# 				check = False
-# 				failures += 1
-# 				job.append(b)
+def correctInputs(text):
+	check = True
+	failures = 0
+	lines = []
+	lineNum = []
+	for i in text:
+		if not (i[0] == '#' or (i[:1] == '/*' and i[-2:] == '*/') or ':' in i):
+			check = False
+			failures += 1
+			lines.append(i)
+			lineNum.append(text.index(i)+1)
 
-# 	return num, check, failures, job
+	return [check, failures, lineNum, lines]
 
-# def test(text):
-# 	check = True
-# 	failures = 0
-# 	for i in text:
-# 		if 'test' in i:
-# 			check = False
-# 			failures += 1
+def valid(jtext):
+	checks = ['update_job', 'insert_job', 'delete_job', 'delete_box']
+	check = True
+	failures = 0
+	job = []
+	for i in jtext:
+		a, b = i[0].split(":")
+		a = a.strip()
+		# print a
+		if a not in checks:
+			check = False
+			failures += 1
+			job.append(i[0])
 
-# 	# return check, failures
+	return [check, failures, job]
 
 # Count jobs
 def count(jtext):
@@ -216,7 +237,7 @@ def test(jtext):
 	job = []
 	for i in jtext:
 		for j in range(len(i)):
-			if 'test' in i[j]:
+			if 'test' in i[j] or 'TEST' in i[j] or 'Test' in i[j]:
 				check = False
 				failures += 1
 				a, b = i[0].split(":")
@@ -398,11 +419,6 @@ def dateConditions(jtext):
 						b = b.strip()
 						job.append(b)
 
-					# if calendar == False and (week == False or timesOrMins == False):
-					# 	check = False
-					# 	failures += 1
-					# 	a, b = i[0].split(": ")
-					# 	job.append(b)
 
 	return [check, failures, job]
 
@@ -413,7 +429,10 @@ def calendar(jtext, changeID):
 	check = True
 	failures = 0
 	job = []
+	cal = ['Calendar Name:']
+	calCountJobs = ['Mulitple Calendars:']
 	for i in jtext:
+		calCount = 0
 		for j in range(len(i)):
 			if 'run_calendar' in i[j]:
 				# check = 'Yes'
@@ -424,6 +443,8 @@ def calendar(jtext, changeID):
 
 				a, b = i[j].split(":")
 				b = b.strip()
+				if b not in cal:
+					cal.append(b)
 				b = b + '.txt'
 				# print changeID
 				# print b
@@ -445,10 +466,18 @@ def calendar(jtext, changeID):
 							check = False
 							failures += 1
 							job.append(b)
+			if 'calendar' in i[j]:
+				calCount += 1
+		if calCount > 1:
+			check = False
+			failures += 1
+			a, b = i[0].split(":")
+			b = b.strip()
+			calCountJobs.append(b)
 
 
 	# return check, num, job
-	return [check, failures, num, job]
+	return [check, failures, num, cal, calCountJobs, job]
 
 # Check notification
 def notification(jtext):
@@ -458,19 +487,16 @@ def notification(jtext):
 	checks = ['send_notification', 'notification_msg', 'notification_emailaddress']
 	for i in jtext:
 		for j in range(len(i)):
-			# a, b = i[j].split(": ")
-			# if a in checks:
-			# 	check = False
-			# 	failures += 1
-			# 	q, w = i[0].split(": ")
-			# 	job.append(w)
 			for k in checks:
 				if k in i[j]:
-					check = False
-					failures += 1
-					q, w = i[0].split(":")
-					w = w.strip()
-					job.append(w)
+					if 'send_notification: n' in i[j]:
+						pass
+					else:
+						check = False
+						failures += 1
+						q, w = i[0].split(":")
+						w = w.strip()
+						job.append(w)
 
 	return [check, failures, job]
 
@@ -493,11 +519,35 @@ def globalVariable(jtext):
 	for i in jtext:
 		for j in range(len(i)):
 			if '$$' in i[j]:
-				temp = i[j][i[j].find('$$')+1:i[j].find('/')]
+				temp = i[j][i[j].find('$$')+3:i[j].find('}')]
 				if temp not in gVar:
 					gVar.append(temp)
 
 	return gVar
+
+# if jobs are deleted then inserted, they should be update jobs
+def deleteInsert(jtext):
+	check = True
+	failures = 0
+	job = []
+	delJobs = []
+	inJobs = []
+	for i in jtext:
+		if 'delete_job' in i[0]:
+			a, b = i[0].split(':')
+			b = b.strip()
+			delJobs.append(b)
+		if 'insert_job' in i[0]:
+			a, b = i[0].split(':')
+			b = b.strip()
+			inJobs.append(b)
+	for i in delJobs:
+		if i in inJobs:
+			check = False
+			failures += 1
+			job.append(i)
+
+	return [check, failures, job]
 
 # Check matching converse jobs in back
 def compareJilBack(jil, back):
@@ -509,11 +559,16 @@ def compareJilBack(jil, back):
 	for i in range(len(compareJil)):
 		# print i
 		if 'delete_job' in compareJil[i]:
+			# print compareJil[i]
 			compareJil[i] = compareJil[i].replace('delete_job', 'insert_job')
-		if 'insert_job' in compareJil[i]:
-			# print i
+			# print compareJil[i]
+			# print
+		elif 'insert_job' in compareJil[i]:
+			# print compareJil[i]
 			# print '#'
 			compareJil[i] = compareJil[i].replace('insert_job', 'delete_job')
+			# print compareJil[i]
+			# print
 	# if jil != back:
 	# 	check = False
 	# print "#####"
@@ -526,25 +581,21 @@ def compareJilBack(jil, back):
 			failures += 1
 			job.append(i)
 
+
+
+
 	return [check, failures, job]
 
 # Check if update jobs have excessive attributes
 def updateJobs(jil, back):
 	check = True
 	failures = 0
-	job = []
+	jobJil = []
+	jobBack = []
 	indexJil = []
 	indexBack = []
-	# for i in jil:
-	# 	for j in range(len(i)):
-	# 		if 'update_job' in i[j]:
-	# 			for k in back:
-	# 				for l in range(len(i)):
-	# 					if i[0] == k[0]:
-	# 						# print i
-	# 						print k
-	# 						indexJil.append(jil.index(i))
-	# 						indexBack.append(back.index(k))
+	attributes = []
+	attributesB = []
 
 	for i in jil:
 		if 'update_job' in i[0]:
@@ -555,37 +606,95 @@ def updateJobs(jil, back):
 
 	for i in range(len(indexJil)):
 		fail = False
-		temp = [jil[indexJil[i]][0]]
-		for j in range(2, len(jil[indexJil[i]])):
+		tempJil = [jil[indexJil[i]][0]]
+		tempBack = [back[indexBack[i]][0]]
+		jobAttribute = [jil[indexJil[i]][0]]
+		backAttribute = [back[indexBack[i]][0]]
+		# check for uniqueness of update jobs
+		for j in range(1, len(jil[indexJil[i]])):
 			# print jil[indexJil[i]][j]
 			# print back[indexBack[i]][j]
 			# if jil[indexJil[i]][j] == back[indexBack[i]][j]:
+			# print jil[indexJil[i]][j]
+
+
+			try:
+				a, b = jil[indexJil[i]][j].split(": ")
+			except:
+				a, b = jil[indexJil[i]][j].split(":")
+			jobAttribute.append(a.strip())
 			if jil[indexJil[i]][j] in back[indexBack[i]]:
 				# print jil[indexJil[i]][j]
 				check = False
 				fail = True
-				temp.append(jil[indexJil[i]][j])
-
+				tempJil.append(jil[indexJil[i]][j])
+		attributes.append(jobAttribute)
+		# check if attributes in back does not exist in jil
+		for j in range(1, len(back[indexBack[i]])):
+			try:
+				a, b = back[indexBack[i]][j].split(": ")
+			except:
+				a, b = back[indexBack[i]][j].split(":")
+			backAttribute.append(a.strip())
+			# if back[indexBack[i]][j] not in jil[indexJil[i]]:
+			# 	check = False
+			# 	fail = True
+			# 	tempBack.append(back[indexBack[i]][j])
+		attributesB.append(backAttribute)
 
 		if fail == True:
 			failures += 1
-		job.append(temp)
+		jobJil.append(tempJil)
+		jobBack.append(tempBack)
 
 	# print indexJil
 	# print indexBack
+	# print attributes
+	# print attributesB
+	# print
 
-	return check, failures, job
+	existinJILandnotBack = []
+	existinBackandnotJIL = []
+	for i in range(len(attributes)):
+		# check if attributes in JIL are not in back
+		temp = [attributes[i][0]]
+		for j in attributes[i]:
+			if j not in attributesB[i]:
+				temp.append(j)
+		existinJILandnotBack.append(temp)
+		# check if attributes in back are not in JIL
+		temp = [attributesB[i][0]]
+		for j in attributesB[i]:
+			if j not in attributes[i]:
+				temp.append(j)
+		existinBackandnotJIL.append(temp)
 
-def allChecks(textParse, textParseBack):
-	passChecks = True
-	fails = 0
+	# print existinJILandnotBack
+	# print existinBackandnotJIL
+
+
+	return [check, failures, existinJILandnotBack, existinBackandnotJIL, jobJil, jobBack]
+
+def asms(jil):
+	check = True
+	failures = 0
 	job = []
-	output = []
-	# allChecks = [jobCount, deleteJobs, deleteJobs, test, ice, status, jobName, owner, startTimes, startMins, daysOfWeek, dateConditions, calendar, notification, machine, globalVariable, updateJobs]
-	allChecks = [jobCount]
-	
-	for f in allChecks:
-		output.append(f(textParse, textParseBack))
+	temp = []
+	for i in jil:
+		a, b = i.split(":")
+		b = b.strip()
+		c = re.search(r"-(\d)*-", b)
+		asmsNum = re.sub(r"-", "", c.group())
+		# print asmsNum
+		if asmsNum not in temp:
+			temp.append(asmsNum)
+			job.append(i)
+	if len(temp) != 1:
+		check = False
+		failures = len(job)
+		return [check, failures, job] 
+	else:
+		return [check, failures, []]
 
 
 def main():
@@ -594,21 +703,29 @@ def main():
 	# jilFile = raw_input("Enter the name of the jil file: ")
 	# parse = readFile(jilFile)
 	changeID, jilName, backName = inputFile('input.txt')
+	changeID = changeID.strip()
+	jilName = jilName.strip()
+	backName = backName.strip()
 	# print changeID
-	parse = readFile(os.path.join('.\\', changeID, jilName))
-	parseBack = readFile(os.path.join('.\\', changeID, backName))
+	parse, jilDupe = readFile(os.path.join('.\\', changeID, jilName))
+	parseBack, backDupe = readFile(os.path.join('.\\', changeID, backName))
 	# parse = readFile(".\\test jils\\UU_EMAIL.txt")
 	# print parse
 	textParse = parseJobs(parse)
 	textParseBack = parseJobs(parseBack)
 	# print textParse
+	# print jilDupe
 
 # Console testing
 	jobCount = count(textParse)
 	print jobCount[0], "update jobs,", jobCount[1], "insert jobs,", jobCount[2], "delete jobs,", jobCount[3], "delete boxes"
 	print "Machine", machine(textParse)
 	print "Global Variable", globalVariable(textParse)
-
+	print "Correct Inputs JIL", correctInputs(parse)
+	print "Correct Inputs Back", correctInputs(parseBack)
+	print "Valid", valid(textParse)
+	print "Jil duplicate jobs", jilDupe
+	print "Backout duplicate jobs", backDupe
 	print "Delete jobs JIL", deleteJobs(textParse)
 	print "Delete jobs Backout", deleteJobs(textParseBack)
 	print "Test", test(textParse)
@@ -622,13 +739,16 @@ def main():
 	print "Date Conditions", dateConditions(textParse)
 	print "Calendar", calendar(textParse, changeID)
 	print "Notification", notification(textParse)
+	print "Delete / Insert", deleteInsert(textParse)
 
 	
 	back = readJobs(os.path.join('.\\', changeID, backName))
 	jil = readJobs(os.path.join('.\\', changeID, jilName))
-	# print jil
-	# print back
-	print "Compare backout", compareJilBack(jil,back)
+
+	
+	print "ASMS JIL", asms(jil)
+	print "ASMS Backout", asms(back)
+	print "Compare backout", compareJilBack(jil, back)
 
 	print
 	print
@@ -661,17 +781,22 @@ def main():
 	a12 = (dateConditions(textParse))
 	a13 = (calendar(textParse, changeID))
 	a14 = (notification(textParse))
-	a15 = (updateJobs(textParse, textParseBack))
-
-	a16 = (machine(textParse))
-	a17 = (globalVariable(textParse))
+	a15 = (valid(textParse))
 
 
+	a16 = (updateJobs(textParse, textParseBack))
 
-	# a2 = [False, 2, ['asdf', 'qwerty']]
-	# a10 = [False, 4,['1', '2', '3', '4']]
-	# a14 = [False, 3, ['asdf', '2', '4']]
+	a17 = (machine(textParse))
+	a18 = (globalVariable(textParse))
 
+	a19 = (compareJilBack(jil, back))
+	a20 = (jilDupe)
+	a21 = (backDupe)
+	a22 = (asms(jil))
+	a23 = (asms(back))
+	a24 = (deleteInsert(textParse))
+	a25 = (correctInputs(parse))
+	a26 = (correctInputs(parseBack))
 
 
 	output.append(a1)
@@ -691,30 +816,18 @@ def main():
 	output.append(a15)
 	output.append(a16)
 	output.append(a17)
+	output.append(a18)
+	output.append(a19)
+	output.append(a20)
+	output.append(a21)
+	output.append(a22)
+	output.append(a23)
+	output.append(a24)
+	output.append(a25)
 
-	# output.append(count(textParse))
-	# output.append(deleteJobs(textParse))
-	# output.append(deleteJobs(textParseBack))
-	# output.append(test(textParse))
-	# output.append(ice(textParse))
-	# output.append(status(textParse))
-	# output.append(jobName(textParse))
-	# output.append(owner(textParse))
-	# output.append(startTimes(textParse))
-	# output.append(startMins(textParse))
-	# output.append(daysOfWeek(textParse))
-	# output.append(dateConditions(textParse))
-	# output.append(calendar(textParse, textParseBack))
-	# output.append(notification(textParse))
-	# output.append([False, 2, ["asdfasdf"]])
-	# output.append([False, 2, ["asdfasdf"]])
-	# output.append([False, 2, ["asdfeafe"]])
-	# output.append(machine(textParse))
-	# output.append(globalVariable(textParse))
-	
-	# print output
-
-	for i in range(1, len(output)-3):
+# Add total of failures and jobs
+	# print output[22]
+	for i in range(1, len(output)-11):
 		# print output[i][0]
 		if output[i][0] == False:
 			passChecks = False
@@ -722,16 +835,16 @@ def main():
 			for j in output[i][-1]:
 				if j not in job:
 					job.append(j)
+
+
 	# print
 	print "Did files pass the syntax check:", passChecks
 	print "Number of failures:", fail
 	print "Jobs that failed:", job
 
-	for i in job:
-		jobs[i] = []
-
-	# print jobs
-
+	# for i in job:
+	# 	print jobs[i]
+	# 	jobs[i] = []
 
 
 	if a2[-1]:
@@ -744,7 +857,7 @@ def main():
 	
 	if a4[-1]:
 		for j in a4[-1]:
-			jobs.setdefault(j,[]).append("Test")
+			jobs.setdefault(j,[]).append("'Test' should not be in JIL")
 
 	if a5[-1]:
 		for j in a5[-1]:
@@ -784,11 +897,11 @@ def main():
 
 	if a14[-1]:
 		for j in a14[-1]:
-			jobs.setdefault(j,[]).append("Notifications are no longer implented. Delete notifications")
+			jobs.setdefault(j,[]).append("Notifications are no longer implemented. Delete notifications")
 
-	# if a15[-1]:
-	# 	for j in a15[-1]:
-	# 		jobs.setdefault(j,[]).append("Update job error")
+	if a15[-1]:
+		for j in a15[-1]:
+			jobs.setdefault(j,[]).append("Invalid job")
 	
 	# if a16[-1]:
 	# 	for j in a16[-1]:
@@ -796,33 +909,159 @@ def main():
 
 	# print "Failures per job:", jobs
 	print "Failures per job:"
+	# print job
 	for i in job:
 		if jobs[i]:
 			print i, jobs[i]
 
 # Writing to output file
 	f = open('output.txt', 'w')
-	f.write('hello\n')
-	f.write("These jobs below have errors\n\n")
-	for i in job:
-		if jobs[i]:
+	f.write('hello\n\n')
+	f.write("We are reviewing your change request prior to sending it to CAB approval. Some items need to be clarified and/or reviewed and fixed. Please see my  comments below and reply back to me with corrections/responses. Your request will be on hold meanwhile.\n\n\n")
+	# Duplicate jobs in JIL
+	if jilDupe[-1]:
+		f.write("These jobs below are duplicated in the JIL:\n")
+		for i in jilDupe[-1]:
 			f.write(str(i))
 			f.write("\n")
-			for j in jobs[i]:
-				f.write(str(j))
-				f.write("\n")
-			f.write("\n")
-			# f.write("\n")
+		f.write("\n\n\n")
 
-	f.write("\n\n")
-	f.write("Update jobs should only have attributes that need to be updated\n")
-	f.write("Please delete these attributes in the JIL file under these job names:\n\n")
-	if a15[-1]:
-		for i in a15[-1]:
+	# Duplicate jobs in Backout
+	if backDupe[-1]:
+		f.write("These jobs below are duplicated in the Backout JIL:\n")
+		for i in backDupe[-1]:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n\n")
+
+	# Syntax errors
+	if job:
+		f.write("These jobs below have errors\n\n")
+		for i in job:
+			if jobs[i]:
+				f.write(str(i))
+				f.write("\n")
+				for j in jobs[i]:
+					f.write(str(j))
+					f.write("\n")
+				f.write("\n")
+				# f.write("\n")
+		f.write("\n")
+	else:
+		f.write("No syntax errors\n\n\n")
+
+	if len(a13[-2]) > 1:
+		# f.write("Calendar Name\n")
+		for i in a13[-2]:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n")
+
+
+	if a19[-1]:
+		f.write("Backout JIL jobs do not mirror JIL\n")
+		f.write("Each insert_job in the jil has to have a mirrored delete_job in the backout and vice versa. Each update_job should also have a mirrored update_job in the backout to revert changes.\n")
+		f.write("Please add the following jobs in the backout:\n\n")
+		for i in a19[-1]:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n\n")
+	else:
+		f.write("No backout errors\n\n\n")
+
+	if a24[-1]:
+		f.write("The job below were deleted and then inserted. These jobs should be combined to update_jobs\n")
+		f.write("Please rewrite these jobs as update_jobs\n\n")
+		for i in a24[-1]:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n")
+
+	if a16[-2]:
+		f.write("Update jobs should only have attributes that need to be updated\n")
+		f.write("Please delete these attributes in the JIL and Backout files under these job names:\n\n")
+		for i in a16[-2]:
 			for j in i:
 				f.write(str(j))
 				f.write("\n")
+			f.write("\n\n")
+	else:
+		f.write("No update_job JIL errors\n\n\n")
+	if a16[-1]:
+		f.write("Update jobs should only have attributes that need to be updated\n")
+		f.write("Please delete these attributes in the Backout files under these job names:\n\n")
+		for i in a16[-1]:
+			for j in i:
+				f.write(str(j))
+				f.write("\n")
+			f.write("\n\n")
+	else:
+		f.write("No update_job Backout errors\n\n\n")
+
+	if a16[2]:
+		f.write("These attributes exist in JIL and not in Backout\n")
+		f.write("Please include these attributes in the Backout as well\n\n")
+		for i in a16[2]:
+			for j in i:
+				f.write(str(j))
+				f.write("\n")
+			f.write("\n\n")
+	else:
+		f.write("Nothing exists in JIL and not Backout")
+
+	if a16[3]:
+		f.write("These attributes exist in Backout and not in JIL\n")
+		f.write("Please include these attributes in the Backout as well\n\n")
+		for i in a16[3]:
+			for j in i:
+				f.write(str(j))
+				f.write("\n")
+			f.write("\n\n")
+	else:
+		f.write("Nothing exists in Backout and not in JIL")
+
+	if a20[-1]:
+		f.write("JIL has duplicate jobs:\n")
+		for i in a20[-1]:
+			f.write(str(i))
 			f.write("\n")
+		f.write("\n\n")
+
+	if a21[-1]:
+		f.write("Backout has duplicate jobs:\n")
+		for i in a21[-1]:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n")
+
+	if a22[-1]:
+		f.write("JIL has more than one ASMS number:\n")
+		f.write("JIL file should only have jobs with one unique ASMS number\n")
+		for i in a22[-1]:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n")
+
+	if a23[-1]:
+		f.write("Backout has more than one ASMS number:\n")
+		f.write("Backout file should only have one unique ASMS number\n")
+		for i in a23[-1]:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n")
+
+	if a25[-1]:
+		f.write("Incorrect input in JIL\n")
+		f.write("Comments should start with '#' or be surrounded by '/*' and '*/'\n")
+		for i in range(len(a25[-1])):
+			f.write("Line number ")
+			f.write(str(a25[-2][i]))
+			f.write(" : ")
+			f.write(str(a25[-1]))
+			f.write("\n")
+		f.write("\n\n")
+
+
 	f.close()
 
 # Copy output file to change request folder
@@ -830,24 +1069,37 @@ def main():
 
 # Writing data file
 	f = open('data.txt', 'w')
+
 	
 	if jobCount[0] != 0:
 		f.write(str(jobCount[0]))
 		f.write(" update jobs")
-		if 0 not in jobCount[1:]:
-			f.write(',')
-	
+		comma = False
+		for i in jobCount[1:]:
+			if i != 0:
+				comma = True
+		if comma == True:
+			f.write(', ')
+
 	if jobCount[1] != 0:
 		f.write(str(jobCount[1]))
 		f.write(" insert jobs")
-		if 0 not in jobCount[2:]:
-			f.write(',')
+		comma = False
+		for i in jobCount[2:]:
+			if i != 0:
+				comma = True
+		if comma == True:
+			f.write(', ')
 	
 	if jobCount[2] != 0:
 		f.write(str(jobCount[2]))
 		f.write(" delete jobs")
-		if 0 not in jobCount[3:]:
-			f.write(',')
+		comma = False
+		for i in jobCount[3:]:
+			if i != 0:
+				comma = True
+		if comma == True:
+			f.write(', ')
 	
 	if jobCount[3] != 0:
 		f.write(str(jobCount[3]))
@@ -859,16 +1111,23 @@ def main():
 	jobInsert = []
 	boxDelete = []
 
-	if a16:
+	if a17:
 		f.write("Machine\n")
-		for i in a16:
+		for i in a17:
 			f.write(str(i))
 			f.write("\n")
 		f.write("\n\n")
 
-	if a17:
+	if a18:
 		f.write("Global Variable\n")
-		for i in a17:
+		for i in a18:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n")
+
+	if len(a13[-3]) > 1:
+		# f.write("Calendar Name\n")
+		for i in a13[-3]:
 			f.write(str(i))
 			f.write("\n")
 		f.write("\n\n")
@@ -882,7 +1141,7 @@ def main():
 			jobDelete.append(b)
 		elif 'insert_job' in a:
 			jobInsert.append(b)
-		elif 'boxDelete' in a:
+		elif 'delete_box' in a:
 			boxDelete.append(b)
 
 
@@ -915,10 +1174,26 @@ def main():
 		for i in boxDelete:
 			f.write(str(i))
 			f.write("\n")
+
+	f.write("\n\n")
+	f.write("The job(s) below could not be verified as successfully tested in Pre-Prod or Dev. Can you send me confirmation that testing was done, or can you perform a test using Autosys Dev and reply back to us once that is complete. We can only go through with the change if the test is done in one of the Autosys lower environments.\n")
+
+	f.write("\n\n")
+	f.write("No Autosys alert notification needed as job rule mask already exists\n\n\n")
+	f.write("An alert notification task to the Autosys team IS REQUIRED")
 	f.close()
 
 # Copy data file in change request folder
 	shutil.copy2('data.txt', os.path.join('.\\', changeID))
+
+
+# Copy jil file from change request folder to parent folder
+	shutil.copy2(os.path.join('.\\', changeID, jilName), '.')
+	shutil.move(jilName, 'inputJil.txt')
+
+# Copy backout file from change request folder to parent folder
+	shutil.copy2(os.path.join('.\\', changeID, backName), '.')
+	shutil.move(backName, 'backoutJIL.txt')
 
 
 main()
