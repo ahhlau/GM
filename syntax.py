@@ -431,6 +431,7 @@ def calendar(jtext, changeID):
 	job = []
 	cal = ['Calendar Name:']
 	calCountJobs = ['Mulitple Calendars:']
+	name = []
 	for i in jtext:
 		calCount = 0
 		for j in range(len(i)):
@@ -443,6 +444,11 @@ def calendar(jtext, changeID):
 
 				a, b = i[j].split(":")
 				b = b.strip()
+				if len(b) > 30:
+					name.append(b)
+				failures += 1
+				check = False
+				job.append(b)
 				if b not in cal:
 					cal.append(b)
 				b = b + '.txt'
@@ -477,7 +483,7 @@ def calendar(jtext, changeID):
 
 
 	# return check, num, job
-	return [check, failures, num, cal, calCountJobs, job]
+	return [check, failures, num, name, cal, calCountJobs, job]
 
 # Check notification
 def notification(jtext):
@@ -681,6 +687,7 @@ def asms(jil):
 	job = []
 	temp = []
 	for i in jil:
+		# print i
 		a, b = i.split(":")
 		b = b.strip()
 		c = re.search(r"-(\d)*-", b)
@@ -743,7 +750,7 @@ def insertJobs(jtext):
 
 	def alarm(iJob):
 		a = 0
-		check = ['y', 'n']
+		check = ['y', 'n', '1', '0']
 		fail = 0
 		for i in iJob:
 			if 'alarm_if_fail:' in i:
@@ -796,6 +803,31 @@ def insertJobs(jtext):
 def uniqueList(seq):
 	seen = set()
 	return [x for x in seq if x not in seen and not seen.add(x)]
+
+def whitespace(jtext):
+
+	check = True
+	failures = 0
+	job = []
+	pattern = re.compile(r'^.*(\s+:|:\s{2,}|[a-zA-Z]:[a-zA-Z])')
+
+	for i in jtext:
+		temp = []
+		for j in range(len(i)):
+
+			if pattern.match(i[j]):
+				check = False
+				failures += 1
+				a, b = i[0].split(":")
+				b = b.strip()
+				if b not in temp:
+					temp.append(b)
+				temp.append(i[j])
+		if temp:
+			job.append(temp)
+
+	return [check, failures, job]
+
 
 def main():
 	print 'hello'
@@ -862,6 +894,11 @@ def main():
 	print
 	print
 
+	print "White Space", whitespace(textParse)
+	print "White Space", whitespace(textParseBack)
+	print
+	print
+
 # Checking
 	passChecks = True
 	fail = 0
@@ -903,6 +940,12 @@ def main():
 
 	a27 = (insertJobs(textParse))
 
+
+	a28 = (whitespace(textParse))
+	a29 = (whitespace(textParseBack))
+
+
+
 	output.append(a1)
 	output.append(a2)
 	output.append(a3)
@@ -930,10 +973,12 @@ def main():
 	output.append(a25)
 	output.append(a26)
 	output.append(a27)
+	output.append(a28)
+	output.append(a29)
 
 # Add total of failures and jobs
 	# print output[22]
-	for i in range(1, len(output)-11):
+	for i in range(1, 15):
 		# print output[i][0]
 		if output[i][0] == False:
 			passChecks = False
@@ -1001,6 +1046,10 @@ def main():
 		for j in a13[-1]:
 			jobs.setdefault(j,[]).append("Calendar name error")
 
+	if a13[-4]:
+		for j in a13[-4]:
+			jobs.setdefault(j,[]).append("Calendar name > 30 chars")
+
 	if a14[-1]:
 		for j in a14[-1]:
 			jobs.setdefault(j,[]).append("Notifications are no longer implemented. Delete notifications")
@@ -1023,7 +1072,7 @@ def main():
 # Writing to output file
 	f = open('output.txt', 'w')
 	f.write('hello\n\n')
-	f.write("We are reviewing your change request prior to sending it to CAB approval. Some items need to be clarified and/or reviewed and fixed. Please see my  comments below and reply back to me with corrections/responses. Your request will be on hold meanwhile.\n\n\n")
+	f.write("We are reviewing your change request prior to sending it to CAB approval. Some items need to be clarified and/or reviewed and fixed. Please see my comments below and reply back to me with corrections/responses. Your request will be on hold meanwhile.\n\n\n")
 	# Duplicate jobs in JIL
 	if jilDupe[-1]:
 		f.write("These jobs below are duplicated in the JIL:\n")
@@ -1192,14 +1241,14 @@ def main():
 		if a27[4][1]:
 			f.write("group - the priority that should be assigned to the incident ticket.  Valid values are P2, P3, or P4\n")
 			f.write("'group' attributes should be in the following insert jobs:\n")
-			for i in a27[3][1]:
+			for i in a27[4][1]:
 				f.write(str(i))
 				f.write("\n")
 			f.write("\n\n")
 		if a27[5][1]:
 			f.write("alarm_if_fail - should be y if an alert is to be sent on failure, or n if an alert is not to be sent\n")
 			f.write("'alarm_if_fail' attributes should be in the following insert jobs:\n")
-			for i in a27[4][1]:
+			for i in a27[5][1]:
 				f.write(str(i))
 				f.write("\n")
 
