@@ -1000,11 +1000,11 @@ def main():
 
 	if a2[-1]:
 		for j in a2[-1]:
-			jobs.setdefault(j,[]).append("Delete job error in jil")
+			jobs.setdefault(j,[]).append("Delete job should only be one line (delete_job: job-name) in jil")
 
 	if a3[-1]:
 		for j in a3[-1]:
-			jobs.setdefault(j,[]).append("Delete job error in backout")
+			jobs.setdefault(j,[]).append("Delete job should only be one line (delete_job: job-name) in backout")
 	
 	if a4[-1]:
 		for j in a4[-1]:
