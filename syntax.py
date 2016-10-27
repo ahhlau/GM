@@ -226,7 +226,7 @@ def deleteJobs(jtext):
 				if len(i) != 1:
 					check = False
 					failures += 1
-					job.append(i)
+					job.append(i[0])
 
 	return [check, failures, job]
 
@@ -1071,7 +1071,7 @@ def main():
 
 # Writing to output file
 	f = open('output.txt', 'w')
-	f.write('hello\n\n')
+	f.write('Hello\n\n')
 	f.write("We are reviewing your change request prior to sending it to CAB approval. Some items need to be clarified and/or reviewed and fixed. Please see my comments below and reply back to me with corrections/responses. Your request will be on hold meanwhile.\n\n\n")
 	# Duplicate jobs in JIL
 	if jilDupe[-1]:
