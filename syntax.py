@@ -77,8 +77,8 @@ def readFile(filename):
 	for i in lines:
 		i = i.strip()
 		if i[0] == '/':
-			pass#
-		elif i[0] == '':
+			pass
+		elif i[0] == '#':
 			pass
 		elif 'job_type' in i and 'job:' in i:
 			a, b = i.split('job_type:')
