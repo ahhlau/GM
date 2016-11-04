@@ -77,8 +77,8 @@ def readFile(filename):
 	for i in lines:
 		i = i.strip()
 		if i[0] == '/':
-			pass
-		elif i[0] == '#':
+			pass#
+		elif i[0] == '':
 			pass
 		elif 'job_type' in i and 'job:' in i:
 			a, b = i.split('job_type:')
@@ -1162,7 +1162,7 @@ def main():
 				f.write("\n")
 			f.write("\n\n")
 	else:
-		f.write("Nothing exists in JIL and not Backout")
+		f.write("Nothing exists in JIL and not Backout\n\n\n")
 
 	if a16[3]:
 		f.write("These attributes exist in Backout and not in JIL\n")
@@ -1173,7 +1173,7 @@ def main():
 				f.write("\n")
 			f.write("\n\n")
 	else:
-		f.write("Nothing exists in Backout and not in JIL")
+		f.write("Nothing exists in Backout and not in JIL\n\n\n")
 
 	if a20[-1]:
 		f.write("JIL has duplicate jobs:\n")
@@ -1232,7 +1232,7 @@ def main():
 		f.write("Please add the attributes below for the following jobs:\n\n")
 
 		if a27[3][1]:
-			f.write("application - the batch monitoring configuration item that should be assigned incidient fialures from the job, format is mon-batch-<application CI>-prod in most cases\n")
+			f.write("application - the batch monitoring configuration item that should be assigned incident failures from the job, format is mon-batch-<application CI>-prod in most cases\n")
 			f.write("'application' attributes should be in the following insert jobs:\n")
 			for i in a27[3][1]:
 				f.write(str(i))
