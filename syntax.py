@@ -234,7 +234,7 @@ def validAttributes(jtext):
 
 		allErrors.append(errors)
 	jobs = dict(zip(job, allErrors))
-	print jobs
+	# print jobs
 
 	return [check, failures, jobs, job]
 
