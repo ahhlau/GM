@@ -1,6 +1,7 @@
 import re
 import os
 import shutil
+from Tkinter import Tk
 
 # 
 def read(filename):
@@ -312,7 +313,7 @@ def jobType(jtext):
 			if 'job_type:' in i[j]:
 				a, b = i[j].split(":")
 				b = b.strip()
-				print b.upper()
+				# print b.upper()
 				if b.upper() not in checks:
 					check = False
 					failures += 1
@@ -648,7 +649,7 @@ def notification(jtext):
 	# create ditionary with job - error pairing
 	jobs = dict(zip(job, allErrors))
 
-	print check
+	# print check
 
 
 	return [check, failures, jobs, job]
@@ -1012,6 +1013,7 @@ def main():
 	print jobCount[0], "update jobs,", jobCount[1], "insert jobs,", jobCount[2], "delete jobs,", jobCount[3], "delete boxes"
 	print "Machine", machine(textParse)
 	print "Global Variable", globalVariable(textParse)
+	print "Application", appName(textParse)
 	print "Correct Inputs JIL", correctInputs(parse)
 	print "Correct Inputs Back", correctInputs(parseBack)
 	print "Valid", valid(textParse)
@@ -1249,8 +1251,8 @@ def main():
 	# print "Failures per job:", jobs
 	print "Failures per job:"
 	# print job
-	print 'JOB'
-	print jobs
+	# print 'JOB'
+	# print jobs
 	for i in job:
 		if jobs[i]:
 			print i, jobs[i]
@@ -1578,5 +1580,12 @@ def main():
 	shutil.copy2(os.path.join('.\\', changeID, backName), '.')
 	shutil.move(backName, 'backoutJIL.txt')
 
+
+# Copy backout file to clipboard
+	r = Tk()
+	r.withdraw()
+	r.clipboard_clear()
+	r.clipboard_append(backName)
+	r.destroy()
 
 main()
