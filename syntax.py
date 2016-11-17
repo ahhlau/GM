@@ -204,6 +204,40 @@ def valid(jtext):
 
 	return [check, failures, job]
 
+
+def validAttributes(jtext):
+	# checks = ['update_job', 'insert_job', 'delete_job', 'delete_box']
+	checks = ['delete_box:', 'delete_job:', 'insert_job:', 'override_job:', 'update_job:', 'alarm_if_fail:', 'application:', 'arc_obj_name:', 'arc_obj_variant:', 'arc_parms:', 'auth_string:', 'auto_delete:', 'auto_hold:', 'avg_runtime:', 'bdc_err_rate:', 'bdc_ext_log:', 'bdc_proc_rate:', 'bdc_system:', 'bean_name:', 'blob_file:', 'blob_input:', 'box_failure:', 'box_name:', 'box_success:', 'box_terminator:', 'broadcast_address:', 'chk_files:', 'class_name:', 'command:', 'condition_code:', 'connect_string:', 'connection_factory:', 'continuous:', 'copy_jcl:', 'create_method:', 'create_name:', 'create_parameter:', 'cpu_usage:', 'date_conditions:', 'days_of_week:', 'dbtype:', 'description:', 'destination_file:', 'destination_name:', 'disk_drive:', 'disk_format:', 'disk_space:', 'elevated:', 'encoding:', 'endpoint_URL:', 'envvars:', 'exclude_calendar:', 'fail_codes:', 'filter:', 'filter_type:', 'finder_name:', 'finder_parameter:', 'ftp_command:', 'ftp_compression:', 'ftp_local_name:', 'ftp_local_user:', 'ftp_remote_name:', 'ftp_server_name:', 'ftp_server_port:', 'ftp_transfer_direction:', 'ftp_transfer_type:', 'ftp_use_SSL:', 'ftp_user_type:', 'group:', 'heartbeat_interval:', 'i5_action:', 'i5_cc_exit:', 'i5_curr_lib:', 'i5_job_desc:', 'i5_job_name:', 'i5_job_queue:', 'i5_lda:', 'i5_lib:', 'i5_library_list:', 'i5_name:', 'i5_others:', 'i5_params:', 'i5_process_priority:', 'initial_context_factory:', 'inside_range:', 'interactive:', 'invocation_type:', 'ip_host:', 'ip_port:', 'ip_status:', 'j2ee_authentication_order:', 'j2ee_conn_domain:', 'j2ee_conn_origin:', 'j2ee_conn_user:', 'j2ee_no_global_proxy_defaults:', 'j2ee_parameter:', 'j2ee_proxy_domain:', 'j2ee_proxy_host:', 'j2ee_proxy_origin_host:', 'j2ee_proxy_port:', 'j2ee_proxy_user:', 'j2ee_user:', 'jcl_library:', 'jcl_member:', 'jmx_parameter:', 'jmx_user:', 'job_class:', 'job_criteria:', 'job_load:', 'job_terminator:', 'job_type:', 'lower_boundary:', 'lower_boundary:', 'mac_address:', 'machine:', 'max_exit_success:', 'max_run_alarm:', 'mbean_attr:', 'mbean_name:', 'mbean_operation:', 'message_class:', 'method_name:', 'mf_jcl_name:', 'mf_jcl_type:', 'mf_server:', 'mf_server_address_type:', 'mf_user:', 'mf_version:', 'min_run_alarm:', 'modify_parameter:', 'monitor_cond:', 'monitor_mode:', 'monitor_type:', 'must_complete_times:', 'must_start_times:', 'n_retrys:', 'no_change:', 'notification_emailaddress:', 'notification_id:', 'notification_msg:', 'one_way:', 'operation_type:', 'oracle_appl_name:', 'oracle_appl_name_type:', 'oracle_args:', 'oracle_custom_property:', 'oracle_desc:', 'oracle_mon_children:', 'oracle_mon_children_delay:', 'oracle_notify_display_users:', 'oracle_notify_users:', 'oracle_output_format:', 'oracle_print_copies:', 'oracle_print_style:', 'oracle_printer:', 'oracle_program:', 'oracle_program_name_type:', 'oracle_programdata:', 'oracle_quote_in_default:', 'oracle_req_set:', 'oracle_req_set_type:', 'oracle_resp:', 'oracle_save_output:', 'oracle_template_language:', 'oracle_template_territory:', 'oracle_use_arg_def:', 'oracle_use_set_defaults_first:', 'oracle_user:', 'os_user:', 'owner:', 'pa_name:', 'pa_monitor_progress:', 'pa_parameter:', 'pa_path:', 'pa_trace:', 'permission:', 'ping_ports:', 'ping_timeout:', 'poll_interval:', 'port:', 'port_name:', 'priority:', 'process_name:', 'process_status:', 'profile:', 'provider_url:', 'provider_url:', 'ps_args:', 'ps_dest_format:', 'ps_dest_type:', 'ps_detail_folder:', 'ps_dlist_roles:', 'ps_dlist_users:', 'ps_email_address:', 'ps_email_address_expanded:', 'ps_email_log:', 'ps_email_subject:', 'ps_email_text:', 'ps_email_web_report:', 'ps_operator_id:', 'ps_output_dest:', 'ps_process_name:', 'ps_process_type:', 'ps_restarts:', 'ps_run_cntrl_args:', 'ps_run_cntrl_id:', 'ps_run_control_table:', 'ps_server_name:', 'ps_skip_parm_updates:', 'ps_time_zone:', 'remote_command:', 'remote_name:', 'remote_target:', 'request_id:', 'resources:', 'result_type:', 'return_class_name:', 'return_namespace:', 'return_xml_name:', 'run_calendar:', 'run_window:', 'sap_abap_name:', 'sap_chain_id:', 'sap_client:', 'sap_event_id:', 'sap_event_parm:', 'sap_ext_table:', 'sap_fail_msg:', 'sap_info_pack:', 'sap_is_trigger:', 'sap_job_class:', 'sap_job_count:', 'sap_job_name:', 'sap_lang:', 'sap_mon_child:', 'sap_office:', 'sap_print_parms:', 'sap_process_client:', 'sap_process_status:', 'sap_proc_type:', 'sap_proc_user:', 'sap_recipients:', 'sap_release_option:', 'sap_rfc_dest:', 'sap_step_num:', 'sap_step_parms:', 'sap_success_msg:', 'sap_target_jobname:', 'sap_target_sys:', 'scp_local_name:', 'scp_local_user:', 'scp_protocol:', 'scp_remote_dir:', 'scp_remote_name:', 'scp_server_name:', 'scp_server_port:', 'scp_target_os:', 'scp_transfer_direction:', 'search_bw:', 'send_notification:', 'service_desk:', 'service_name:', 'shell:', 'snmp_auth_protocol:', 'snmp_comm_string:', 'snmp_context_engine_id:', 'snmp_context_name:', 'snmp_host:', 'snmp_mib:', 'snmp_oid:', 'snmp_privacy:', 'snmp_privacy_user:', 'snmp_subtree:', 'snmp_table_view:', 'snmp_value:', 'snmp_version:', 'sp_arg:', 'sp_name:', 'spool_file:', 'sql_command:', 'start_mins:', 'start_times:', 'std_err_file:', 'std_in_file:', 'std_out_file:', 'submit_modifier:', 'success_codes:', 'success_criteria:', 'success_pattern:', 'svcdesk_attr:', 'svcdesk_desc:', 'svcdesk_imp:', 'svcdesk_pri:', 'svcdesk_sev:', 'tablename:', 'target_namespace:', 'term_run_time:', 'text_file_filter:', 'text_file_filter_exists:', 'text_file_mode:', 'text_file_name:', 'time_format:', 'time_position:', 'timezone:', 'trigger_cond:', 'trigger_type:', 'ulimit:', 'upper_boundary:', 'upper_boundary:', 'URL:', 'use_topic:', 'user_role:', 'wake_password:', 'watch_file:', 'watch_file_change_type:', 'watch_file_change_value:', 'watch_file_groupname:', 'watch_file_min_size:', 'watch_file_owner:', 'watch_file_recursive:', 'watch_file_type:', 'watch_file_win_user:', 'watch_interval:', 'watch_no_change:', 'web_parameter:', 'web_user:', 'win_event_category:', 'win_event_computer:', 'win_event_datetime:', 'win_event_description:', 'win_event_id:', 'win_event_op:', 'win_event_source:', 'win_event_type:', 'win_log_name:', 'win_service_name:', 'win_service_status:', 'ws_authentication_order:', 'ws_conn_domain:', 'ws_conn_origin:', 'ws_conn_user:', 'ws_global_proxy_defaults:', 'ws_proxy_domain:', 'ws_proxy_host:', 'ws_proxy_origin:', 'ws_proxy_port:', 'ws_proxy_user:', 'ws_security:', 'wsdl_operation:', 'WSDL_URL:', 'zos_dataset:', 'zos_dsn_renamed:', 'zos_dsn_updated:', 'zos_explicit_dsn:', 'zos_ftp_direction:', 'zos_ftp_host:', 'zos_ftp_userid:', 'zos_jobname:', 'zos_trigger_by:', 'zos_trigger_on:', 'zos_trigger_type:']
+	check = True
+	failures = 0
+	job = []
+	allErrors = []
+	jobs = {}
+	for i in jtext:
+		errors = []
+		for j in range(len(i)):
+			attCheck = False
+			for k in checks:
+				if k in i[j]:
+					attCheck = True
+			if attCheck == False:
+				a, b = i[j].split(':')
+				a = a.strip()
+				check = False
+				failures += 1
+				q, w = i[0].split(":")
+				w = w.strip()
+				if w not in job:
+					job.append(w)
+				errors.append('Invalid attribute: ' + a)
+
+
+		allErrors.append(errors)
+	jobs = dict(zip(job, allErrors))
+	print jobs
+
+	return [check, failures, jobs, job]
+
 # Count jobs
 def count(jtext):
 	check = ['update_job', 'insert_job', 'delete_job', 'delete_box']
@@ -637,13 +671,6 @@ def notification(jtext):
 			if w not in job:
 				job.append(w)
 
-		# if sendNotif == 1:
-		# 	if not(notifMsg == True) or not(countNotifEmail	> 0):
-		# 		check = False
-		# 		failures += 1
-		# 		q, w = i[0].split(":")
-		# 		w = w.strip()
-		# 		job.append(w)
 
 		allErrors.append(errors)
 	# create ditionary with job - error pairing
@@ -1034,6 +1061,8 @@ def main():
 	print "Calendar", calendar(textParse, changeID)
 	print "Notification", notification(textParse)
 	print "Delete / Insert", deleteInsert(textParse)
+	print "Valid Attributes JIL", validAttributes(textParse)
+	print "Valid Attributes Back", validAttributes(textParseBack)
 
 	
 	back = readJobs(os.path.join('.\\', changeID, backName))
@@ -1110,6 +1139,8 @@ def main():
 	a30 = (appName(textParse))
 
 	a31 = (notification(textParse))
+	a32 = (validAttributes(textParse))
+	a33 = (validAttributes(textParseBack))
 
 
 
@@ -1144,10 +1175,12 @@ def main():
 	output.append(a29)
 	output.append(a30)
 	output.append(a31)
+	output.append(a32)
+	output.append(a33)
 
 # Add total of failures and jobs
 	# print output[22]
-	for i in range(1, 16) + range(30,31):
+	for i in range(1, 16) + range(30,33):
 		# print output[i][0]
 		if output[i][0] == False:
 			passChecks = False
@@ -1230,6 +1263,21 @@ def main():
 			for value in a31[-2][key]:
 				jobs.setdefault(key,[]).append(value)
 
+	if a32[-1]:
+		for key in a32[-2]:
+			# print key
+			# print a32[-2][key]
+			for value in a32[-2][key]:
+				jobs.setdefault(key,[]).append(value)
+
+	if a33[-1]:
+		for key in a33[-2]:
+			# print key
+			# print a33[-2][key]
+			for value in a33[-2][key]:
+				jobs.setdefault(key,[]).append(value)
+
+
 	# print a14
 	# if a14[-1]:
 	# 	for j in a14[-1]:
@@ -1250,9 +1298,9 @@ def main():
 
 	# print "Failures per job:", jobs
 	print "Failures per job:"
-	# print job
+	print job
 	# print 'JOB'
-	# print jobs
+	print jobs
 	for i in job:
 		if jobs[i]:
 			print i, jobs[i]
