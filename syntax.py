@@ -310,9 +310,10 @@ def jobType(jtext):
 	for i in jtext:
 		for j in range(len(i)):
 			if 'job_type:' in i[j]:
-				a, b = i[0].split(":")
+				a, b = i[j].split(":")
 				b = b.strip()
-				if b not in checks:
+				print b.upper()
+				if b.upper() not in checks:
 					check = False
 					failures += 1
 					c, d = i[0].split(":")
