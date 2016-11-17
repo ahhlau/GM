@@ -301,6 +301,26 @@ def jobName(jtext):
 
 	return [check, failures, job]
 
+# Check valid job_types
+def jobType(jtext):
+	check = True
+	failures = 0
+	job = []
+	checks = ['BOX', 'CMD', 'DBMON', 'DBPROC', 'DBTRIG', 'ENTYBEAN', 'FT', 'FTP', 'FW', 'HTTP', 'I5', 'JAVARMI', 'JMSPUB', 'JMSSUB', 'JMXMAG', 'JMXMAS', 'JMXMC', 'JMXMOP', 'JMXMREM', 'JMXSUB', 'MICROFOCUS', 'OACOPY', 'OASET', 'OASG', 'OMCPU', 'OMD', 'OMEL', 'OMIP', 'OMP', 'OMS', 'OMTF', 'PAPROC', 'PAREQ', 'POJO', 'PROXY', 'PS', 'SAPBDC', 'SAPBWIP', 'SAPBWPC', 'SAPDA', 'SAPEVT', 'SAPJC', 'SAPPM', 'SAP', 'SCP', 'SESSBEAN', 'SNMPGET', 'SNMPSET', 'SQL', 'WBSVC', 'WOL', 'WSDOC', 'ZOS', 'ZOSDST', 'ZOSM']
+	for i in jtext:
+		for j in range(len(i)):
+			if 'job_type:' in i[j]:
+				a, b = i[0].split(":")
+				b = b.strip()
+				if b not in checks:
+					check = False
+					failures += 1
+					c, d = i[0].split(":")
+					d = d.strip()
+					job.append(d)
+
+	return [check, failures, job]
+
 # Check valid owner
 def owner(jtext):
 	check = True
@@ -490,21 +510,147 @@ def notification(jtext):
 	check = True
 	failures = 0
 	job = []
-	checks = ['send_notification', 'notification_msg', 'notification_emailaddress']
+	# jobs = {}
+	allErrors = []
+# 
+	# checks = ['send_notification', 'notification_msg', 'notification_emailaddress']
+	# for i in jtext:
+	# 	for j in range(len(i)):
+	# 		for k in checks:
+	# 			if k in i[j]:
+	# 				if 'send_notification: n' in i[j]:
+	# 					pass
+	# 				else:
+	# 					check = False
+	# 					failures += 1
+	# 					q, w = i[0].split(":")
+	# 					w = w.strip()
+	# 					job.append(w)
+
+	
+
+	def checkNotifMsg(attributeValue):
+		check = True
+		reasons = []
+		if len(attributeValue) > 255:
+			check = False
+			reason = 'notification_msg attribute value is limited to 255 characters'
+			reasons.append(reason)
+		if attributeValue[0] != '"' or attributeValue[-1] != '"':
+			check = False
+			reason = 'notification_msg attribute value must be surrounded with double quotes'
+			reasons.append(reason)
+		if '"' in attributeValue[1:-2] and attributeValue[attributeValue.index('"',1,len(attributeValue)-1)-1] != '\\':
+			check = False
+			reason = 'notification_msg attribute value: if double quotes are needed in the middle of the string, it must be preceeded by a backslash'
+			reasons.append(reason)
+		return [check, reasons]
+
+
+
 	for i in jtext:
+		sendNotif = 2
+		notifMsg = False
+		countNotifEmail = 0
+		errors = []
 		for j in range(len(i)):
-			for k in checks:
-				if k in i[j]:
-					if 'send_notification: n' in i[j]:
-						pass
+			if 'send_notification:' in i[j]:
+				a, b = i[j].split(":")
+				b = b.strip()
+				if b == 'y' or b == '1' or b == 'f' or b =='F':
+					sendNotif = 1
+				elif b == 'n':
+					sendNotif = 0
+				else:
+					check = False
+					failures += 1
+					q, w = i[0].split(":")
+					w = w.strip()
+					errors.append("send_notification value is invalid - only valid values are 'y', '1', 'f', 'F', 'n'")
+					if w not in job:						
+						job.append(w)
+				# print sendNotif
+			if 'notification_msg:' in i[j]:
+				# print 'notiffffmsg'
+				if sendNotif == 0:
+					check = False
+					failures += 1
+					q, w = i[0].split(":")
+					w = w.strip()
+					if w not in job:
+						job.append(w)
+				if sendNotif == 1:
+					c, d = i[j].split(':')
+					d = d.strip()
+					a = checkNotifMsg(d)
+					if a[0] == True:
+						notifMsg = True
 					else:
+						for k in a[1]:
+							errors.append(k)
 						check = False
 						failures += 1
 						q, w = i[0].split(":")
 						w = w.strip()
+						if w not in job:
+							job.append(w)
+					
+					print errors
+			if 'notification_emailaddress:' in i[j]:
+				if sendNotif == 0:
+					check = False
+					failures += 1
+					q, w = i[0].split(":")
+					w = w.strip()
+					if w not in job:
 						job.append(w)
+				if sendNotif == 1:
+					countNotifEmail += 1
+			if 'notification_id:' in i[j]:
+				check = False
+				failures += 1
+				q, w = i[0].split(":")
+				w = w.strip()
+				if w not in job:
+					job.append(w)
+				errors.append("notification_id attribute invalid. Please delete")
 
-	return [check, failures, job]
+		if sendNotif == 1 and countNotifEmail == 0:
+			# print 'count notif email'
+			# print countNotifEmail
+			errors.append('send_notification is used in this job. Please also include notification_emailaddress attribute.')
+			check = False
+			failures += 1
+			q, w = i[0].split(":")
+			w = w.strip()
+			if w not in job:
+				job.append(w)
+
+		if sendNotif == 1 and notifMsg == False:
+			errors.append('send_notification is used in this job. Please also include notification_msg attribute')
+			check = False
+			failures += 1
+			q, w = i[0].split(":")
+			w = w.strip()
+			if w not in job:
+				job.append(w)
+
+		# if sendNotif == 1:
+		# 	if not(notifMsg == True) or not(countNotifEmail	> 0):
+		# 		check = False
+		# 		failures += 1
+		# 		q, w = i[0].split(":")
+		# 		w = w.strip()
+		# 		job.append(w)
+
+		allErrors.append(errors)
+	# create ditionary with job - error pairing
+	jobs = dict(zip(job, allErrors))
+
+	print check
+
+
+	return [check, failures, jobs, job]
 
 # Returns list of machine name
 def machine(jtext):
@@ -518,6 +664,18 @@ def machine(jtext):
 					mac.append(b)
 
 	return mac
+
+def appName(jtext):
+	app = []
+	for i in jtext:
+		for j in range(len(i)):
+			if 'application:' in i[j]:
+				a, b = i[j].split(":")
+				b = b.strip()
+				if b not in app:
+					app.append(b)
+
+	return app
 
 # Returns list of global variables
 def globalVariable(jtext):
@@ -856,6 +1014,7 @@ def main():
 	print "Correct Inputs JIL", correctInputs(parse)
 	print "Correct Inputs Back", correctInputs(parseBack)
 	print "Valid", valid(textParse)
+	print "Job Types", jobType(textParse)
 	print "Jil duplicate jobs", jilDupe
 	print "Backout duplicate jobs", backDupe
 	print "Delete jobs JIL", deleteJobs(textParse)
@@ -920,7 +1079,8 @@ def main():
 	a11 = (daysOfWeek(textParse))
 	a12 = (dateConditions(textParse))
 	a13 = (calendar(textParse, changeID))
-	a14 = (notification(textParse))
+	# a14 = (notification(textParse))
+	a14 = (jobType(textParse))
 	a15 = (valid(textParse))
 
 
@@ -943,6 +1103,10 @@ def main():
 
 	a28 = (whitespace(textParse))
 	a29 = (whitespace(textParseBack))
+
+	a30 = (appName(textParse))
+
+	a31 = (notification(textParse))
 
 
 
@@ -975,10 +1139,12 @@ def main():
 	output.append(a27)
 	output.append(a28)
 	output.append(a29)
+	output.append(a30)
+	output.append(a31)
 
 # Add total of failures and jobs
 	# print output[22]
-	for i in range(1, 15):
+	for i in range(1, 16) + range(30,31):
 		# print output[i][0]
 		if output[i][0] == False:
 			passChecks = False
@@ -1050,9 +1216,26 @@ def main():
 		for j in a13[-4]:
 			jobs.setdefault(j,[]).append("Calendar name > 30 chars")
 
+	# print
+	# print
+	# print "#########"
+	# print a31
+	if a31[-1]:
+		for key in a31[-2]:
+			# print key
+			# print a31[-2][key]
+			for value in a31[-2][key]:
+				jobs.setdefault(key,[]).append(value)
+
+	# print a14
+	# if a14[-1]:
+	# 	for j in a14[-1]:
+	# 		jobs.setdefault(j,[]).append("Notifications are no longer implemented. Delete notifications")
+
 	if a14[-1]:
 		for j in a14[-1]:
-			jobs.setdefault(j,[]).append("Notifications are no longer implemented. Delete notifications")
+			jobs.setdefault(j,[]).append("Invalid job_type")
+
 
 	if a15[-1]:
 		for j in a15[-1]:
@@ -1065,6 +1248,8 @@ def main():
 	# print "Failures per job:", jobs
 	print "Failures per job:"
 	# print job
+	print 'JOB'
+	print jobs
 	for i in job:
 		if jobs[i]:
 			print i, jobs[i]
@@ -1311,6 +1496,13 @@ def main():
 	if a18:
 		f.write("Global Variable\n")
 		for i in a18:
+			f.write(str(i))
+			f.write("\n")
+		f.write("\n\n")
+
+	if a30:
+		f.write("Application\n")
+		for i in a30:
 			f.write(str(i))
 			f.write("\n")
 		f.write("\n\n")
