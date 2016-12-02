@@ -303,7 +303,7 @@ def jobName(jtext):
 		# print i
 		a, b = i[0].split(":")
 		b = b.strip()
-		if len(b) > 64 or ' ' in b:
+		if len(b) > 64 or ' ' in b or '/' in b:
 			check = False
 			failures += 1
 			job.append(b)
@@ -420,10 +420,11 @@ def dateConditions(jtext):
 	check = True
 	failures = 0
 	job = []
+	q = 1
 	for i in jtext:
 		for j in range(len(i)):
 			if 'date_conditions:' in i[j]:
-				if 'date_conditions: 0' not in i[j]:
+				if 'date_conditions: 0' not in i[j] and 'date_conditions: n' not in i[j]:
 					week = False
 					times = False
 					mins = False
@@ -442,12 +443,42 @@ def dateConditions(jtext):
 					if times != mins:
 						timeOrMins = True
 
-					if not(week or timeOrMins) and calendar == False:
+					# if not(week and timeOrMins and calendar == False):
+					# 	check = False
+					# 	failures += 1
+					# 	a, b = i[0].split(":")
+					# 	b = b.strip()
+					# 	job.append(b)
+
+					# if (calendar and timeOrMins and week == False):
+					# 	pass
+					# else:
+					# 	print 'cal', calendar, 'timeormins', timeOrMins, 'week', week
+					# 	check = False
+					# 	failures += 1
+					# 	a, b = i[0].split(":")
+					# 	b = b.strip()
+					# 	job.append(b)
+
+					
+					# if calendar != week or (calendar == False and week == False):
+					# 	print q
+					# 	q += 1
+					# 	if not timeOrMins:
+					# 		check = False
+					# 		failures += 1
+					# 		a, b = i[0].split(":")
+					# 		b = b.strip()
+					# 		job.append(b)
+
+					if not((week and times) or (week and mins) or (calendar and times) or (calendar and mins)):
 						check = False
 						failures += 1
 						a, b = i[0].split(":")
 						b = b.strip()
 						job.append(b)
+
+
 
 
 	return [check, failures, job]
@@ -582,7 +613,8 @@ def notification(jtext):
 				# print sendNotif
 			if 'notification_msg:' in i[j]:
 				# print 'notiffffmsg'
-				if sendNotif == 0:
+				
+				if sendNotif == 0 or sendNotif == 2:
 					check = False
 					failures += 1
 					q, w = i[0].split(":")
@@ -590,7 +622,7 @@ def notification(jtext):
 					if w not in job:
 						job.append(w)
 				if sendNotif == 1:
-					c, d = i[j].split(':')
+					c, d = i[j].split(':', 1)
 					d = d.strip()
 					a = checkNotifMsg(d)
 					if a[0] == True:
@@ -607,7 +639,7 @@ def notification(jtext):
 					
 					print errors
 			if 'notification_emailaddress:' in i[j]:
-				if sendNotif == 0:
+				if sendNotif == 0 or sendNotif == 2:
 					check = False
 					failures += 1
 					q, w = i[0].split(":")
@@ -786,9 +818,9 @@ def updateJobs(jil, back):
 
 
 			try:
-				a, b = jil[indexJil[i]][j].split(": ")
+				a, b = jil[indexJil[i]][j].split(": ", 1)
 			except:
-				a, b = jil[indexJil[i]][j].split(":")
+				a, b = jil[indexJil[i]][j].split(":", 1)
 			jobAttribute.append(a.strip())
 			if jil[indexJil[i]][j] in back[indexBack[i]]:
 				# print jil[indexJil[i]][j]
@@ -799,9 +831,9 @@ def updateJobs(jil, back):
 		# check if attributes in back does not exist in jil
 		for j in range(1, len(back[indexBack[i]])):
 			try:
-				a, b = back[indexBack[i]][j].split(": ")
+				a, b = back[indexBack[i]][j].split(": ", 1)
 			except:
-				a, b = back[indexBack[i]][j].split(":")
+				a, b = back[indexBack[i]][j].split(":", 1)
 			backAttribute.append(a.strip())
 			# if back[indexBack[i]][j] not in jil[indexJil[i]]:
 			# 	check = False
@@ -1192,7 +1224,7 @@ def main():
 	
 	if a7[-1]:
 		for j in a7[-1]:
-			jobs.setdefault(j,[]).append("Job name > 64 chars or has space in it")
+			jobs.setdefault(j,[]).append("Job name > 64 chars or has space or '/' in it")
 
 	if a8[-1]:
 		for j in a8[-1]:
@@ -1214,9 +1246,9 @@ def main():
 		for j in a12[-1]:
 			jobs.setdefault(j,[]).append("Date conditions invalid")
 	
-	if a13[-1]:
-		for j in a13[-1]:
-			jobs.setdefault(j,[]).append("Calendar name error")
+	# if a13[-1]:
+	# 	for j in a13[-1]:
+	# 		jobs.setdefault(j,[]).append("Calendar name error")
 
 	if a13[-4]:
 		for j in a13[-4]:
@@ -1587,9 +1619,9 @@ def main():
 	f.write("\n\n")
 	f.write("The job(s) below could not be verified as successfully tested in Pre-Prod or Dev. Can you send me confirmation that testing was done, or can you perform a test using Autosys Dev and reply back to us once that is complete. We can only go through with the change if the test is done in one of the Autosys lower environments.\n")
 
-	f.write("\n\n")
-	f.write("No Autosys alert notification needed as job rule mask already exists\n\n\n")
-	f.write("An alert notification task to the Autosys team IS REQUIRED")
+	# f.write("\n\n")
+	# f.write("No Autosys alert notification needed as job rule mask already exists\n\n\n")
+	# f.write("An alert notification task to the Autosys team IS REQUIRED")
 	f.close()
 
 # Copy data file in change request folder
